@@ -6,7 +6,7 @@
 [![HuggingFace](https://img.shields.io/badge/Model-TrOCR-yellow.svg)](https://huggingface.co/anuashok/ocr-captcha-v3)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An intelligent, modular browser automation framework built with **Python**, **Selenium**, and **TrOCR (Vision-Encoder-Decoder)**. 
+An intelligent, modular browser automation framework built with **Python**, **Selenium**, and **TrOCR (Vision-Encoder-Decoder)**.
 
 It provides an interactive popup for entering credentials on any website, dynamically discovers form elements using **DOM heuristics**, solves image CAPTCHAs **100% offline**, and maintains persistent browser sessions.
 
@@ -26,18 +26,42 @@ It provides an interactive popup for entering credentials on any website, dynami
 
 ```text
 ├── models/
-│   └── ocr-captcha-v3/      # Offline TrOCR model weights & configurations
+│   └── ocr-captcha-v3/        # Offline TrOCR model weights & configurations
+├── rnd/
+│   └── model_benchmark.png    # Accuracy comparison chart across evaluated models
 ├── images/
-│   └── temp_captcha.png     # Scratch storage for captured CAPTCHAs
-├── popup.py                 # Tkinter GUI credential & URL popup
-├── framework.py             # Generic automation engine & DOM heuristics
-├── captcha_solver.py        # Offline TrOCR inference module
-├── download_model.py        # Utility script to pre-cache the OCR model
-├── run_automation.py        # Main execution entrypoint
-├── requirements.txt         # Project dependencies
-├── .env.example             # Example environment file
+│   └── temp_captcha.png       # Scratch storage for captured CAPTCHAs
+├── Captcha_breaker_RnD.ipynb  # Interactive R&D notebook evaluating multiple OCR models
+├── popup.py                   # Tkinter GUI credential & URL popup
+├── framework.py               # Generic automation engine & DOM heuristics
+├── captcha_solver.py          # Offline TrOCR inference module
+├── download_model.py          # Utility script to pre-cache the OCR model
+├── run_automation.py          # Main execution entrypoint
+├── requirements.txt           # Project dependencies
+├── .env.example               # Example environment file
 └── README.md
 ```
+
+---
+
+## 🔬 HF Model Benchmarks (R&D)
+
+To select the most robust OCR engine for diverse real-world CAPTCHAs, an extensive empirical benchmark was conducted across multiple Vision-Encoder-Decoder models on 21 challenging CAPTCHA variants (covering warped fonts, strike lines, speckle noise, drop shadows, low contrast, and alternating cases).
+
+The full experimental workflow, predictions, and evaluation code are documented in:  
+📄 **[`Captcha_breaker_RnD.ipynb`](Captcha_breaker_RnD.ipynb)**
+
+### 📊 Benchmark Comparison (Exact Match Accuracy)
+
+<p align="center">
+  <img src="model-rnd/model_benchmark.png" alt="Model Accuracy Comparison" width="650"/>
+</p>
+
+| Model                     | Hugging Face Repository                                                                                 | Exact Match Accuracy | Evaluation Insights                                                                                                                                                             |
+| :------------------------ | :------------------------------------------------------------------------------------------------------ | :------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Base Model (Selected)** | [`anuashok/ocr-captcha-v3`](https://huggingface.co/anuashok/ocr-captcha-v3)                             |      **28.57%**      | **Highest overall accuracy.** Exhibits superior generalization across varied font weights, noise speckles, and distorted characters. Selected as the framework's default model. |
+| **FT Model 1**            | [`dathuynh1108/ocr-captcha-v3-finetuned`](https://huggingface.co/dathuynh1108/ocr-captcha-v3-finetuned) |        23.81%        | Competitive on standard alphanumeric strings but suffered degradation on heavy background noise and stroke artifacts.                                                           |
+| **FT Model 2**            | [`emelnov/ocr-captcha-v4-mailru`](https://huggingface.co/emelnov/ocr-captcha-v4-mailru)                 |        9.52%         | Specialized primarily for Mail.ru CAPTCHA formats; struggled with mixed casing and complex multi-word distortions.                                                              |
 
 ---
 
@@ -75,6 +99,7 @@ cp .env.example .env
 ```
 
 Edit `.env` to pre-fill your credentials in the popup:
+
 ```env
 MERCHANT_ID=your_username_or_id
 MERCHANT_PASSWORD=your_secure_password
@@ -88,7 +113,7 @@ Download and store the model weights in `./models/ocr-captcha-v3/` for offline u
 python download_model.py
 ```
 
-*(If you skip this step, the framework will automatically download and save the model on your first run).*
+_(If you skip this step, the framework will automatically download and save the model on your first run)._
 
 ### 5. Run the Automation
 
@@ -97,6 +122,7 @@ python run_automation.py
 ```
 
 A popup dialog will appear:
+
 1. Enter or paste your **Target URL**.
 2. Type or confirm your **Username / ID** and **Password**.
 3. Click **Start Auto-Login →**.
@@ -109,13 +135,13 @@ The framework will launch Chrome, navigate to the page, fill your credentials, s
 
 When an unfamiliar URL is passed to the framework, the heuristic engine resolves elements dynamically:
 
-| Element | Heuristic Strategy |
-| :--- | :--- |
-| **Password** | Detects the primary visible `input[type='password']` element. |
-| **Username** | Evaluates preceding visible inputs relative to the password field, followed by common attributes (`name="user"`, `id="login"`, `type="email"`). |
-| **CAPTCHA Image** | Scans for image/canvas tags matching `captcha`, `capture`, or `setCapture` keywords with valid display dimensions. |
-| **CAPTCHA Input** | Identifies text inputs associated with captcha keywords or adjacent to the captcha image. |
-| **Submit Button** | Searches for submit buttons inside the form, button text matching `Login` / `Sign In` / `Submit`, or sends the `ENTER` key. |
+| Element           | Heuristic Strategy                                                                                                                              |
+| :---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Password**      | Detects the primary visible `input[type='password']` element.                                                                                   |
+| **Username**      | Evaluates preceding visible inputs relative to the password field, followed by common attributes (`name="user"`, `id="login"`, `type="email"`). |
+| **CAPTCHA Image** | Scans for image/canvas tags matching `captcha`, `capture`, or `setCapture` keywords with valid display dimensions.                              |
+| **CAPTCHA Input** | Identifies text inputs associated with captcha keywords or adjacent to the captcha image.                                                       |
+| **Submit Button** | Searches for submit buttons inside the form, button text matching `Login` / `Sign In` / `Submit`, or sends the `ENTER` key.                     |
 
 ---
 
