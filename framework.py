@@ -23,6 +23,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from captcha_solver import CaptchaSolver
+from logger import log_activity
 
 class SiteProfile:
     """Pre-configured selectors for specific websites."""
@@ -58,16 +59,16 @@ class GenericLoginFramework:
 
     def _register_default_profiles(self):
         """Registers default profiles with verified selectors."""
-        sslcommerz_profile = SiteProfile(
-            name="SSLCommerz Merchant",
-            url_identifier="sslcommerz.com",
+        sample_profile = SiteProfile(
+            name="Sample Portal",
+            url_identifier="example-portal.com",
             user_selector=(By.ID, "user"),
             pass_selector=(By.ID, "passwd"),
-            captcha_img_selector=(By.XPATH, "//form[@id='loginform']//img | //img[contains(@src, 'setCapture')]"),
-            captcha_input_selector=(By.ID, "capture"),
-            submit_selector=(By.ID, "wp-submit")
+            captcha_img_selector=(By.XPATH, "//form[@id='loginform']//img | //img[contains(@src, 'captcha')]"),
+            captcha_input_selector=(By.ID, "captcha"),
+            submit_selector=(By.ID, "submit")
         )
-        self.register_profile(sslcommerz_profile)
+        self.register_profile(sample_profile)
 
     def register_profile(self, profile: SiteProfile):
         self.profiles[profile.url_identifier.lower()] = profile
@@ -207,58 +208,58 @@ class GenericLoginFramework:
 
     # ---------------- Login Workflow ---------------- #
 
-    def login(self, url: str, username: str, password: str, auto_captcha: bool = True) -> webdriver.Chrome:
+    def login(self, url: str, username: str, password: str, auto_captcha: bool = True) -> Optional[webdriver.Chrome]:
         """Executes the complete login workflow."""
-        driver = self.initialize_driver()
-
+        driver = None
         try:
+            driver = self.initialize_driver()
             if auto_captcha:
                 self.captcha_solver.warmup()
 
             profile = self.match_profile(url)
             site_label = f"profile: '{profile.name}'" if profile else "Generic DOM Heuristics"
-            print(f"[Framework] Running with {site_label}")
+            log_activity(f"[Framework] Running with {site_label}")
 
-            print(f"[Framework] Navigating to: {url}")
+            log_activity(f"[Framework] Navigating to: {url}")
             driver.get(url)
 
             # 1. Locate fields
-            print("[Framework] Locating input fields...")
+            log_activity("[Framework] Locating input fields...")
             pass_elem = self.find_password_field(driver, profile)
             user_elem = self.find_username_field(driver, pass_elem, profile)
 
             # 2. Enter credentials
             masked_user = f"{username[:3]}***" if len(username) > 3 else "***"
-            print(f"[Framework] Entering username ({masked_user})...")
+            log_activity(f"[Framework] Entering username ({masked_user})...")
             user_elem.clear()
             user_elem.send_keys(username)
 
-            print("[Framework] Entering password...")
+            log_activity("[Framework] Entering password...")
             pass_elem.clear()
             pass_elem.send_keys(password)
 
             # 3. Handle CAPTCHA if detected
             captcha_img, captcha_input = self.find_captcha_elements(driver, profile)
             if captcha_img and captcha_input:
-                print("[Framework] CAPTCHA detected on page.")
+                log_activity("[Framework] CAPTCHA detected on page.")
                 if auto_captcha:
                     base_dir = os.path.dirname(os.path.abspath(__file__))
                     temp_captcha_path = os.path.join(base_dir, "images", "temp_captcha.png")
                     os.makedirs(os.path.dirname(temp_captcha_path), exist_ok=True)
 
-                    print("[Framework] Capturing CAPTCHA...")
+                    log_activity("[Framework] Capturing CAPTCHA...")
                     captcha_img.screenshot(temp_captcha_path)
 
                     predicted_digits, raw = self.captcha_solver.solve_image(temp_captcha_path)
-                    print(f"[Framework] Solved CAPTCHA: '{predicted_digits}' (Raw: '{raw}')")
+                    log_activity(f"[Framework] Solved CAPTCHA: '{predicted_digits}' (Raw: '{raw}')")
 
                     captcha_input.clear()
                     captcha_input.send_keys(predicted_digits)
             else:
-                print("[Framework] No CAPTCHA found on page.")
+                log_activity("[Framework] No CAPTCHA found on page.")
 
             # 4. Submit form
-            print("[Framework] Submitting login form...")
+            log_activity("[Framework] Submitting login form...")
             submit_btn = self.find_submit_button(driver, profile)
             if submit_btn:
                 submit_btn.click()
@@ -268,18 +269,50 @@ class GenericLoginFramework:
 
             # 5. Post-submit status
             time.sleep(3)
-            print(f"[Framework] Current URL: {driver.current_url}")
-            print(f"[Framework] Page Title: {driver.title}")
+            log_activity(f"[Framework] Current URL: {driver.current_url}")
+            log_activity(f"[Framework] Page Title: {driver.title}")
 
             otp_found = driver.find_elements(By.XPATH, "//input[contains(translate(@id, 'OTP', 'otp'), 'otp') or contains(translate(@name, 'OTP', 'otp'), 'otp')]")
             if otp_found:
-                print("[Framework] OTP / 2FA screen detected. Browser remains open for manual verification.")
+                log_activity("[Framework] OTP / 2FA screen detected. Browser remains open for manual verification.", level="WARNING")
             else:
-                print("[Framework] Login completed. Browser kept open.")
+                log_activity("[Framework] Login completed successfully.")
 
             return driver
 
         except Exception as e:
-            print(f"[Framework Error] {e}")
-            print("[Framework] Browser is kept open for manual inspection.")
+            log_activity(f"[Framework Error] {e}", level="ERROR")
+            if driver:
+                log_activity("[Framework] Browser is kept open for manual inspection.", level="WARNING")
             return driver
+
+
+# ---------------- Plug-and-Play Convenience Aliases ---------------- #
+
+def automated_login(*args, **kwargs):
+    """Zero-click automated login taking credentials directly from .env."""
+    from run_automation import automated_login as _al
+    return _al(*args, **kwargs)
+
+
+def scheduled_login(*args, **kwargs):
+    """Schedule automated login at a specific time (e.g. '16:30', '4:30 PM', '+30m')."""
+    from scheduler import scheduled_login as _sl
+    return _sl(*args, **kwargs)
+
+
+def scheduled_recurring_login(*args, **kwargs):
+    """Schedule recurring daily login at a given time of day."""
+    from scheduler import scheduled_recurring_login as _srl
+    return _srl(*args, **kwargs)
+
+
+__all__ = [
+    "SiteProfile",
+    "GenericLoginFramework",
+    "automated_login",
+    "scheduled_login",
+    "scheduled_recurring_login",
+    "log_activity"
+]
+

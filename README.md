@@ -6,18 +6,19 @@
 [![HuggingFace](https://img.shields.io/badge/Model-TrOCR-yellow.svg)](https://huggingface.co/anuashok/ocr-captcha-v3)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An intelligent, modular browser automation framework built with **Python**, **Selenium**, and **TrOCR (Vision-Encoder-Decoder)**.
+An intelligent, zero-click browser automation framework built with **Python**, **Selenium**, and **TrOCR (Vision-Encoder-Decoder)**.
 
-It provides an interactive popup for entering credentials on any website, dynamically discovers form elements using **DOM heuristics**, solves image CAPTCHAs **100% offline**, and maintains persistent browser sessions.
+Credentials and settings are loaded directly from `.env` with **zero popup dialogs and no manual clicks**. Includes plug-and-play functions for **immediate logins**, **scheduled logins at a specific time**, and **recurring daily schedules**.
 
 ---
 
 #### ✨ Features
 
-- **🖥️ Interactive Credential Popup**: Native GUI dialog built with `Tkinter` to input or modify target URLs, usernames, and passwords (with masked input and show/hide toggle).
-- **🌐 Generic Link Support**: Smart heuristic engine that automatically detects login fields (username, password, captcha image, captcha input, and submit buttons) on any generic website without hardcoded selectors.
+- **⚡ Zero-Click Plug-and-Play**: Credentials and target URLs load seamlessly from `.env` (or function arguments). No popups or manual user interaction required.
+- **⏰ Flexible Scheduling Engine**: Schedule logins at specific times (e.g. `16:30`, `04:30 PM`, `+45m`, or `2026-10-12 18:00`), recurring daily schedules, or recurring intervals.
+- **🌐 Generic Link Support**: Heuristic engine that automatically detects login fields (username, password, captcha image, captcha input, and submit buttons) on any generic website without hardcoded selectors.
 - **🧠 100% Offline AI CAPTCHA Solver**: Utilizes [anuashok/ocr-captcha-v3](https://huggingface.co/anuashok/ocr-captcha-v3) TrOCR model stored locally on disk. Fast, zero API costs, and immune to Hugging Face Hub rate limits.
-- **🎯 Site Profile Support**: Register precise selectors for specific high-priority websites (e.g. SSLCommerz Merchant Portal) with automatic fallback to generic heuristics.
+- **🎯 Site Profile Support**: Register precise selectors for specific target websites (e.g. custom corporate or merchant portals) with automatic fallback to generic heuristics.
 - **🔒 Session & 2FA Persistence**: Keeps the Chrome browser open with `detach: True`, allowing seamless transition to manual OTP/SMS two-factor verification or dashboard inspection.
 
 ---
@@ -27,16 +28,17 @@ It provides an interactive popup for entering credentials on any website, dynami
 ```text
 ├── models/
 │   └── ocr-captcha-v3/        # Offline TrOCR model weights & configurations
-├── rnd/
+├── model-rnd/
 │   └── model_benchmark.png    # Accuracy comparison chart across evaluated models
 ├── images/
 │   └── temp_captcha.png       # Scratch storage for captured CAPTCHAs
-├── Captcha_breaker_RnD.ipynb  # Interactive R&D notebook evaluating multiple OCR models
-├── popup.py                   # Tkinter GUI credential & URL popup
+├── logs/                      # Date-stamped daily activity logs (auto-rotated)
 ├── framework.py               # Generic automation engine & DOM heuristics
+├── scheduler.py               # Plug-and-play scheduling engine (one-time & recurring)
+├── logger.py                  # Daily timestamped activity logger (logs/activity_YYYY-MM-DD.log)
 ├── captcha_solver.py          # Offline TrOCR inference module
 ├── download_model.py          # Utility script to pre-cache the OCR model
-├── run_automation.py          # Main execution entrypoint
+├── run_automation.py          # Plug-and-play orchestrator & CLI entry point
 ├── requirements.txt           # Project dependencies
 ├── .env.example               # Example environment file
 └── README.md
@@ -67,67 +69,120 @@ The full experimental workflow, predictions, and evaluation code are documented 
 
 ### 🚀 Quick Start
 
-#### 1. Clone the Repository
+#### 1. Clone the Repository & Install Dependencies
 
 ```bash
 git clone https://github.com/your-username/local_automation.git
 cd local_automation
-```
 
-#### 2. Set Up Virtual Environment & Dependencies
-
-```bash
-# Create virtual environment
+# Create & activate virtual environment
 python -m venv venv
+venv\Scripts\activate      # On Windows
+# source venv/bin/activate # On macOS/Linux
 
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install requirements
 pip install -r requirements.txt
 ```
 
-#### 3. (Optional) Configure Default Credentials
+#### 2. Configure Credentials in `.env`
 
-Copy the example environment file to `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` to pre-fill your credentials in the popup:
+Copy `.env.example` to `.env` and fill in your credentials:
 
 ```env
-MERCHANT_ID=your_username_or_id
-MERCHANT_PASSWORD=your_secure_password
+LOGIN_URL=https://example.com/login
+MERCHANT_ID=demo_user_123
+MERCHANT_PASSWORD=demo_secure_password
+HEADLESS=false
+AUTO_CAPTCHA=true
 ```
 
-#### 4. Cache Model Locally
-
-Download and store the model weights in `./models/ocr-captcha-v3/` for offline use:
+#### 3. Cache Model Locally (Offline Use)
 
 ```bash
 python download_model.py
 ```
 
-_(If you skip this step, the framework will automatically download and save the model on your first run)._
+---
 
-#### 5. Run the Automation
+### 💻 Plug-and-Play Usage
+
+#### Option A: Run from Command Line (CLI)
 
 ```bash
+# 1. Run immediately (takes credentials from .env, zero clicks!)
 python run_automation.py
+
+# 2. Schedule login at a specific time today (e.g. 16:30 or 4:30 PM)
+python run_automation.py --schedule "16:30"
+
+# 3. Schedule relative delay (e.g. 45 minutes from now)
+python run_automation.py --schedule "+45m"
+
+# 4. Schedule recurring daily login (e.g. 9:00 AM every morning)
+python run_automation.py --daily "09:00"
+
+# 5. Run headless in the background
+python run_automation.py --headless
 ```
 
-A popup dialog will appear:
+#### Option B: Plug into Your Own Python Scripts
 
-1. Enter or paste your **Target URL**.
-2. Type or confirm your **Username / ID** and **Password**.
-3. Click **Start Auto-Login →**.
+```python
+from run_automation import (
+    automated_login,
+    scheduled_login,
+    scheduled_recurring_login
+)
 
-The framework will launch Chrome, navigate to the page, fill your credentials, solve the CAPTCHA, submit the form, and leave the browser open.
+# 1. Immediate automated login (reads credentials from .env)
+driver = automated_login()
+
+# 2. Immediate automated login with explicit credentials
+driver = automated_login(
+    url="https://example.com/login",
+    username="my_username",
+    password="my_password",
+    headless=True
+)
+
+# 3. Scheduled login at a particular time
+scheduled_login(target_time="16:30")
+
+# 4. Scheduled login in background thread (non-blocking)
+thread, stop_event = scheduled_login(target_time="04:30 PM", background=True)
+
+# 5. Recurring daily login at 08:00 AM with custom scraper callback
+def my_scraper(driver):
+    print("Scraping daily reports with authenticated driver...")
+    driver.get("https://example.com/reports")
+    # extract data...
+    driver.quit()
+
+scheduled_recurring_login(time_of_day="08:00", callback=my_scraper)
+```
+
+---
+
+### 📝 Daily Activity Logging & Audit Trail
+
+The framework automatically records all activities, timestamps, scheduler events, CAPTCHA solutions, and errors in a date-stamped log file:
+
+📁 **`logs/activity_YYYY-MM-DD.log`**
+
+- **Auto-Rotation**: Rotates to a new file automatically each midnight (`activity_2026-10-12.log`, `activity_2026-10-13.log`, etc.).
+- **Dual Output**: Streams clean logs to both console stdout and disk concurrently.
+- **Sample Log Entry**:
+  ```text
+  [2026-10-12 08:00:00] [INFO] [Scheduler] 🔔 Target time reached: 2026-10-12 08:00:00
+  [2026-10-12 08:00:01] [INFO] [Run] Target URL   : https://example.com/login
+  [2026-10-12 08:00:01] [INFO] [Run] Username     : dem***
+  [2026-10-12 08:00:02] [INFO] [Framework] Navigating to: https://example.com/login
+  [2026-10-12 08:00:04] [INFO] [Framework] Locating input fields...
+  [2026-10-12 08:00:05] [INFO] [Framework] Entering credentials (dem***)...
+  [2026-10-12 08:00:06] [INFO] [Framework] CAPTCHA detected on page.
+  [2026-10-12 08:00:07] [INFO] [Framework] Solved CAPTCHA: '4892' (Raw: '4892')
+  [2026-10-12 08:00:09] [INFO] [Framework] Login completed successfully.
+  [2026-10-12 08:00:10] [INFO] [Scheduler] Executing post-login callback/scraper...
+  ```
 
 ---
 
@@ -147,10 +202,10 @@ When an unfamiliar URL is passed to the framework, the heuristic engine resolves
 
 ### ⚙️ Adding Custom Site Profiles
 
-To register explicit selectors for a specific website, add a new `SiteProfile` in [framework.py](file:///d:/Personal-projects/local_automation/framework.py):
+To register explicit selectors for a specific website, add a `SiteProfile`:
 
 ```python
-from framework import SiteProfile, By
+from framework import GenericLoginFramework, SiteProfile, By
 
 my_site = SiteProfile(
     name="My Custom Portal",
@@ -162,6 +217,7 @@ my_site = SiteProfile(
     submit_selector=(By.CSS_SELECTOR, "button.btn-login")
 )
 
+framework = GenericLoginFramework()
 framework.register_profile(my_site)
 ```
 
