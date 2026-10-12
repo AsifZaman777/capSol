@@ -1,0 +1,19 @@
+# Environment & Secrets
+.env
+
+# Model weights
+models/
+*.safetensors
+*.bin
+
+# Python cache & temp
+__pycache__/
+*.py[cod]
+
+# Images & Captchas
+images/*.png
+images/*.jpg
+
+# IDE
+.vscode/
+.idea/
