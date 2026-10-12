@@ -62,13 +62,13 @@ def main():
             (By.XPATH, "//form[@id='loginform']//img | //img[contains(@src, 'setCapture')]")
         ))
         
-        # save ss
-        captcha_path = "temp_captcha.png"
-        captcha_img.screenshot(captcha_path)
+        # save ss to images directory
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        captcha_path_name = os.path.join(base_dir, "images", "temp_captcha.png")
+        captcha_img.screenshot(captcha_path_name)
         print("Captured captcha image.")
-
-        # predict captcha digits with TrOCR
-        image = Image.open(captcha_path).convert("RGBA")
+        
+        image = Image.open(captcha_path_name).convert("RGBA")
         background = Image.new("RGBA", image.size, (255, 255, 255))
         combined = Image.alpha_composite(background, image).convert("RGB")
 
