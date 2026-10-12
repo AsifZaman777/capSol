@@ -1,4 +1,4 @@
-# 🚀 Web Auto-Login Framework with Offline AI CAPTCHA Solver
+### Web Auto-Login Framework with Offline AI CAPTCHA Solver
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)](https://www.python.org/)
 [![Selenium](https://img.shields.io/badge/Selenium-4.0%2B-43B02A.svg)](https://www.selenium.dev/)
@@ -12,7 +12,7 @@ It provides an interactive popup for entering credentials on any website, dynami
 
 ---
 
-## ✨ Features
+#### ✨ Features
 
 - **🖥️ Interactive Credential Popup**: Native GUI dialog built with `Tkinter` to input or modify target URLs, usernames, and passwords (with masked input and show/hide toggle).
 - **🌐 Generic Link Support**: Smart heuristic engine that automatically detects login fields (username, password, captcha image, captcha input, and submit buttons) on any generic website without hardcoded selectors.
@@ -22,7 +22,7 @@ It provides an interactive popup for entering credentials on any website, dynami
 
 ---
 
-## 📁 Project Structure
+#### 📁 Project Structure
 
 ```text
 ├── models/
@@ -44,7 +44,7 @@ It provides an interactive popup for entering credentials on any website, dynami
 
 ---
 
-## 🔬 HF Model Benchmarks (R&D)
+#### 🔬 HF Model Benchmarks (R&D)
 
 To select the most robust OCR engine for diverse real-world CAPTCHAs, an extensive empirical benchmark was conducted across multiple Vision-Encoder-Decoder models on 21 challenging CAPTCHA variants (covering warped fonts, strike lines, speckle noise, drop shadows, low contrast, and alternating cases).
 
@@ -65,16 +65,16 @@ The full experimental workflow, predictions, and evaluation code are documented 
 
 ---
 
-## 🚀 Quick Start
+### 🚀 Quick Start
 
-### 1. Clone the Repository
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/local_automation.git
 cd local_automation
 ```
 
-### 2. Set Up Virtual Environment & Dependencies
+#### 2. Set Up Virtual Environment & Dependencies
 
 ```bash
 # Create virtual environment
@@ -90,7 +90,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. (Optional) Configure Default Credentials
+#### 3. (Optional) Configure Default Credentials
 
 Copy the example environment file to `.env`:
 
@@ -105,7 +105,7 @@ MERCHANT_ID=your_username_or_id
 MERCHANT_PASSWORD=your_secure_password
 ```
 
-### 4. Cache Model Locally
+#### 4. Cache Model Locally
 
 Download and store the model weights in `./models/ocr-captcha-v3/` for offline use:
 
@@ -115,7 +115,7 @@ python download_model.py
 
 _(If you skip this step, the framework will automatically download and save the model on your first run)._
 
-### 5. Run the Automation
+#### 5. Run the Automation
 
 ```bash
 python run_automation.py
@@ -131,7 +131,7 @@ The framework will launch Chrome, navigate to the page, fill your credentials, s
 
 ---
 
-## 🛠️ How Generic Link Heuristics Work
+### 🛠️ How Generic Link Heuristics Work
 
 When an unfamiliar URL is passed to the framework, the heuristic engine resolves elements dynamically:
 
@@ -145,7 +145,7 @@ When an unfamiliar URL is passed to the framework, the heuristic engine resolves
 
 ---
 
-## ⚙️ Adding Custom Site Profiles
+### ⚙️ Adding Custom Site Profiles
 
 To register explicit selectors for a specific website, add a new `SiteProfile` in [framework.py](file:///d:/Personal-projects/local_automation/framework.py):
 
@@ -167,7 +167,7 @@ framework.register_profile(my_site)
 
 ---
 
-## ⚖️ Disclaimer & Ethical Use Notice
+### ⚖️ Disclaimer & Ethical Use Notice
 
 > [!WARNING]
 > **Strictly for Educational, Learning, and Legitimate Personal Automation Purposes Only.**
@@ -178,6 +178,6 @@ framework.register_profile(my_site)
 
 ---
 
-## 🛡️ License
+#### 🛡️ License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
